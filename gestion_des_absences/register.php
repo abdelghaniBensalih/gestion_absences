@@ -35,6 +35,7 @@
       <input type="submit" name='subEtu' value="Envoyer">
    </form>
    </div>
+   <p>vous avez déjà inscrire? <a href="index.php">se connecte</a></p>
   </center>
 </body>
 </html>
