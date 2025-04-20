@@ -109,7 +109,7 @@
         $sql="select * from filieres ";
         $lignes=$pdo->query($sql)->fetchAll();
        foreach($lignes as $ligne){?>
-        <option value=""><?$ligne['nom']?></option>
+        <option value=""><?= $ligne['nom']?></option>
        <?php}?>
       </select>
       <input type="submit" name='subEtu' value="Envoyer">
