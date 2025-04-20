@@ -1,6 +1,26 @@
 <?php
 $title = "Accueil";
 require_once "includes/header.php";
+require "config/db.php";
+
+
+
+
+if(isset($_POST['subEtu'])) {
+    $nom = $_POST['apogee'] ;
+    $password = $_POST['password'];
+    $tmp =false;
+    foreach($lignes as $ligne){
+        if($ligne['apogee'] == $nom && $ligne['mot_de_passe'] == $password){
+            $tmp = true;
+        }
+    }
+    if($tmp){
+        header("location:dashbord_etudiant.php");
+    }else{
+        echo "<p style='color:red'>le mot de passe et/ou Apogee est incorrect</p>";
+    }
+}
 
 ?>
 <!DOCTYPE html>
@@ -12,6 +32,13 @@ require_once "includes/header.php";
     <title>Accueil</title>
     <link rel="stylesheet" href="assets/style.css">
     <style>
+        body {
+            background-color: white;
+            margin: 0px;
+            padding: 0px;
+            background-attachment: fixed;
+        }
+
         .btns1 {
             display: flex;
             border: solid 4px #5da;
@@ -131,7 +158,7 @@ require_once "includes/header.php";
                 <div class="etudiantConnecte">
                     <form action="" method="post">
                         <label for="ap">Entrer votre APOGEE: </label><br>
-                        <input type="text" name="apogee" id="ap" placeholder='username'><br>
+                        <input type="text" name="apogee" id="ap" placeholder='apogee'><br>
                         <label for="pw">Entrer votre Mot de passe: </label><br>
                         <input type="password" name="password" id="pw" placeholder='mot de passe'><br>
                         <input type="submit" id="btn" name='subEtu' value="Envoyer">
@@ -139,7 +166,6 @@ require_once "includes/header.php";
                     <p>vous avez pas encore inscrire? <a href="register.php">inscription</a></p>
                 </div>
             <?php endif ?>
-
             <?php if (isset($_POST['admin'])): ?>
                 <div class="adminConnecte">
                     <form action="" method="post">
