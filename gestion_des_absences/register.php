@@ -28,9 +28,21 @@
       <label for="filiere">Filiere </label>
       <select name="filiere" id="filiere">
        <option value="">------</option>
-       <?php foreach($dd as $ligne){?>
-        <option value="">$ligne['nom_filiere']</option>
-      <?php }?>
+       <?php
+        try{
+          $pdo=new PDO("mysql:host=localhost;dbname=gestion_etudiants;charset=utf8mb4","root","",[
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+          ]);
+          echo "<p>Connexion réussie !</p>";
+        }catch (PDOException $e) {
+          die("Erreur de connexion : " . $e->getMessage());      
+        }
+        $sql="select * from filieres ";
+        $lignes=$pdo->query($sql)->fetchAll();
+       foreach($lignes as $ligne){?>
+        <option value=""><?$ligne['nom']?></option>
+       <?php}?>
       </select>
       <input type="submit" name='subEtu' value="Envoyer">
    </form>
