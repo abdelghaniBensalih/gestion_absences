@@ -94,6 +94,25 @@
       <?php }?>
       </select><br>
       <input type="submit" name='subEtu' id="btn" value="Envoyer">
+=======
+       <?php
+        try{
+          $pdo=new PDO("mysql:host=localhost;dbname=gestion_etudiants;charset=utf8mb4","root","",[
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+          ]);
+          echo "<p>Connexion réussie !</p>";
+        }catch (PDOException $e) {
+          die("Erreur de connexion : " . $e->getMessage());      
+        }
+        $sql="select * from filieres ";
+        $lignes=$pdo->query($sql)->fetchAll();
+       foreach($lignes as $ligne){?>
+        <option value=""><?$ligne['nom']?></option>
+       <?php}?>
+      </select>
+      <input type="submit" name='subEtu' value="Envoyer">
+>>>>>>> fa55cf813d9eb83fdb90b73bbbb9c0487cdcdc68
    </form>
 
    <p>vous avez déjà inscrire? <a href="index.php">se connecte</a></p>
