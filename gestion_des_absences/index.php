@@ -5,20 +5,24 @@ require "config/db.php";
 
 
 
-
-if(isset($_POST['subEtu'])) {
-    $nom = $_POST['apogee'] ;
+$error = "";
+$formuleAffiche = false;
+if (isset($_POST['subEtu'])) {
+    $nom = $_POST['apogee'];
     $password = $_POST['password'];
-    $tmp =false;
-    foreach($lignes as $ligne){
-        if($ligne['apogee'] == $nom && $ligne['mot_de_passe'] == $password){
+    $tmp = false;
+    foreach ($lignes as $ligne) {
+        if ($ligne['apogee'] == $nom && $ligne['mot_de_passe'] == $password) {
             $tmp = true;
         }
     }
-    if($tmp){
+    if ($tmp) {
+        $error = "";
         header("location:dashbord_etudiant.php");
-    }else{
-        echo "<p style='color:red'>le mot de passe et/ou Apogee est incorrect</p>";
+        exit();
+    } else {
+        $error = "<p style='color:red'>le mot de passe et/ou Apogee est incorrect</p>";
+        $formuleAffiche = true;
     }
 }
 
@@ -115,8 +119,7 @@ if(isset($_POST['subEtu'])) {
             margin: 0px;
             padding: 0px;
             border-radius: 7px;
-
-
+            border: 1px solid #0df;
         }
 
         .adminConnecte>form>input:focus {
@@ -129,6 +132,14 @@ if(isset($_POST['subEtu'])) {
             background-color: rgba(245, 231, 244);
             border-radius: 7px;
             box-sizing: border-box;
+            border: 1px solid #0df;
+        }
+
+        .etudiantConnecte>form>#btn,
+        .adminConnecte>form>#btn {
+            cursor: pointer;
+            border: 1px solid #0df;
+            background-color: rgba(240, 241, 267);
         }
 
         .etudiantConnecte>form>input {
@@ -138,6 +149,7 @@ if(isset($_POST['subEtu'])) {
             border: 1px solid #0df;
             outline: none;
             border-radius: 7px;
+
         }
     </style>
 </head>
@@ -154,7 +166,8 @@ if(isset($_POST['subEtu'])) {
                 </form>
             </div>
 
-            <?php if (isset($_POST['etudiant'])): ?>
+            
+            <?php if (isset($_POST['etudiant']) || $formuleAffiche): ?>     
                 <div class="etudiantConnecte">
                     <form action="" method="post">
                         <label for="ap">Entrer votre APOGEE: </label><br>
@@ -162,12 +175,13 @@ if(isset($_POST['subEtu'])) {
                         <label for="pw">Entrer votre Mot de passe: </label><br>
                         <input type="password" name="password" id="pw" placeholder='mot de passe'><br>
                         <input type="submit" id="btn" name='subEtu' value="Envoyer">
+                        <?= $error ?>
                     </form>
                     <p>vous avez pas encore inscrire? <a href="register.php">inscription</a></p>
                 </div>
-            <?php endif ?>
-            <?php if (isset($_POST['admin'])): ?>
-                <div class="adminConnecte">
+                <?php endif ?>
+                <?php if (isset($_POST['admin'])): ?>
+                    <div class="adminConnecte">
                     <form action="" method="post">
                         <label for="ap">Entrer votre identifiant: </label><br>
                         <input type="text" name="id" id="ap" placeholder='username'><br>
