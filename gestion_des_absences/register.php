@@ -86,21 +86,41 @@ require "config/db.php";
         <?php for ($i = 0; $i <= 6; $i++): ?>
           &nbsp;
         <?php endfor ?>
-        <input type="password" name="password" id="password" required><br>
+      <input type="password" name="password" id="password" required ><br>
+      
 
-
-        <label for="filiere">Filiere </label>
-        <?php for ($i = 0; $i <= 12; $i++): ?>
-          &nbsp;
+      <label for="filiere">Filiere </label>
+      <?php for($i=0;$i<=12;$i++): ?>
+        &nbsp;
         <?php endfor ?>
-        <select name="filiere" id="filiere">
-          <option value="">------</option>
-          <?php foreach ($lignesF as $ligne) { ?>
-            <option value="<?=$ligne['nom']?>"><?= $ligne['nom'] ?></option>
-          <?php } ?>
-        </select><br>
-        <input type="submit" name='subEtu' id="btn" value="Envoyer">
-      </form>
+      <select name="filiere" id="filiere">
+       <option value="">------</option>
+<<<<<<< HEAD
+       <?php foreach($dd as $ligne){?>
+        <option value="">$ligne['nom_filiere']</option>
+      <?php }?>
+      </select><br>
+      <input type="submit" name='subEtu' id="btn" value="Envoyer">
+=======
+       <?php
+        try{
+          $pdo=new PDO("mysql:host=localhost;dbname=gestion_etudiants;charset=utf8mb4","root","",[
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+          ]);
+          echo "<p>Connexion réussie !</p>";
+        }catch (PDOException $e) {
+          die("Erreur de connexion : " . $e->getMessage());      
+        }
+        $sql="select * from filieres ";
+        $lignes=$pdo->query($sql)->fetchAll();
+       foreach($lignes as $ligne){?>
+        <option value=""><?= $ligne['nom']?></option>
+       <?php }?>
+      </select>
+      <input type="submit" name='subEtu' value="Envoyer">
+>>>>>>> fa55cf813d9eb83fdb90b73bbbb9c0487cdcdc68
+   </form>
 
       <p>vous avez déjà inscrire? <a href="index.php">se connecte</a></p>
     </div>
