@@ -110,7 +110,7 @@
         $lignes=$pdo->query($sql)->fetchAll();
        foreach($lignes as $ligne){?>
         <option value=""><?= $ligne['nom']?></option>
-       <?php}?>
+       <?php }?>
       </select>
       <input type="submit" name='subEtu' value="Envoyer">
 >>>>>>> fa55cf813d9eb83fdb90b73bbbb9c0487cdcdc68
