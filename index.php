@@ -29,6 +29,29 @@ if (isset($_POST['subEtu'])) {
     }
 }
 
+
+$errorAd = "";
+$formuleAfficheA = false;
+if (isset($_POST['subAdm'])) {
+    $nom = $_POST['id'];
+    $password = $_POST['password'];
+    $Tmp = false;
+    foreach ($lignesAd as $ligne) {
+        if ($ligne['id_administrateur'] == $nom && $ligne['mot_de_passe'] == $password) {
+            $Tmp = true;
+        }
+    }
+    if ($Tmp) {
+        $errorAd = "";
+        header("location:dashbord_admin.php");
+        exit();
+    } else {
+        $errorAd = "<p style='color:red'>le mot de passe et/ou Apogee est incorrect</p>";
+        $formuleAfficheA = true;
+    }
+}
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -69,13 +92,15 @@ if (isset($_POST['subEtu'])) {
                     <p>vous avez pas encore inscrire? <a href="register.php">inscription</a></p>
                 </div>
             <?php endif ?>
-            <?php if (isset($_POST['admin'])): ?>
+            
+            <?php if (isset($_POST['admin']) || $formuleAfficheA): ?>
                 <div class="adminConnecte">
                     <form action="" method="post">
                         <label for="ap">Entrer votre identifiant: </label><br>
                         <input type="text" name="id" id="ap" placeholder='username'><br>
                         <label for="pw">Entrer votre Mot de passe: </label><br>
                         <input type="password" name="password" id="pw" placeholder='mot de passe'><br>
+                        <?= $errorAd ?>
                         <input type="submit" name='subAdm' id="btn" value="Envoyer">
                     </form>
                 </div>

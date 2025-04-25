@@ -1,6 +1,6 @@
 <?php
 try {
-  $pdo = new PDO("mysql:host=localhost;dbname=gestion_etudiants;charset=utf8mb4", "root", "", [
+  $pdo = new PDO("mysql:host=localhost;dbname=gestion_etudiants;charset=utf8mb4", "root", "password", [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
   ]);
@@ -17,4 +17,7 @@ $lignesF = $pdo->query($sqlFiliere)->fetchAll();
 
 $sqlModule = "SELECT * from modules ";
 $lignesM = $pdo->query($sqlModule)->fetchAll();
+
+$sqlAdmin = "SELECT * from administrateur ";
+$lignesAd = $pdo->query($sqlAdmin)->fetchAll();
 
