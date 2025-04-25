@@ -6,13 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title> header  </title>
     <style>
-        body{
+        body , html{
+            height: 100%;
             margin: 0px;
         }
         tr{
             height : 80px;
             width : 100%;
-            background-color:rgba(0, 110, 255, 0.93) ;
+            background-color:rgba(0, 255, 149, 0.76) ;
         }
         td{
             display: flex;
