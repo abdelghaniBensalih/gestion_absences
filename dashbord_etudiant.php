@@ -12,6 +12,6 @@ require "includes/header.php";
     <title>Document</title>
 </head>
 <body>
-    <h1>Welcome Mr.<?= "" ?></h1>
+    <h1>Welcome Mr.h1>
 </body>
 </html>
