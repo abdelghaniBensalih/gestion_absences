@@ -1,4 +1,9 @@
 <?php
+session_start();
+if($_SESSION['auth'] != "Oui"){
+    header("location:index.php");
+    exit();
+}
 require "config/db.php";
 $title="Espace Etudiant";
 require "includes/header.php";

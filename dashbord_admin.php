@@ -1,4 +1,9 @@
 <?php
+session_start();
+if($_SESSION['authAdmin'] != "Oui"){
+    header("location:index.php");
+    exit();
+}
 require "config/db.php";
 $title="Espace Administrateur";
 require "includes/header.php";

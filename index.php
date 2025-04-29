@@ -1,13 +1,20 @@
 <?php
+session_start();
+
+
+
 $title = "Accueil";
 require_once "includes/header.php";
 require "config/db.php";
 
 header('Content-Type: text/html; charset=UTF-8');
 
+// $_SESSION['auth'] = "Non";
+// $_SESSION['authAdmin'] = "Non";
 $error = "";
 $errorAd = "";
 $activeTab = isset($_POST['admin']) || isset($_POST['subAdm']) ? 'admin' : 'etudiant';
+
 if (isset($_POST['subEtu'])) {
     $nom = $_POST['apogee'];
     $password = $_POST['password'];
@@ -18,11 +25,17 @@ if (isset($_POST['subEtu'])) {
         }
     }
     if ($tmp) {
+        $_SESSION['auth'] = "Oui";
         $error = "";
         header("location:dashbord_etudiant.php");
         exit();
     } else {
-        $error = "<p style='color:red'>le mot de passe et/ou Apogee est incorrect</p>";
+        // $error = "<p style='color:red'>le mot de passe et/ou Apogee est incorrect</p>";
+        $error = <<<_HTML
+            <div class="alert alert-danger" role="alert">
+                <strong>Erreur !</strong> Le mot de passe et/ou Apogee est incorrect.
+            </div>
+        _HTML;
         $activeTab = 'etudiant';
     }
 }
@@ -38,11 +51,17 @@ if (isset($_POST['subAdm'])) {
         }
     }
     if ($Tmp) {
+        $_SESSION['authAdmin'] = "Oui";
         $errorAd = "";
         header("location:dashbord_admin.php");
         exit();
     } else {
-        $errorAd = "<p style='color:red'>le mot de passe et/ou identifiant est incorrect</p>";
+        // $errorAd = "<p style='color:red'>le mot de passe et/ou identifiant est incorrect</p>";
+        $errorAd = <<<_HTML
+            <div class="alert alert-danger" role="alert">
+                <strong>Erreur !</strong> Le mot de passe et/ou identifiant est incorrect.
+            </div>
+        _HTML;
         $activeTab = 'admin'; 
     }
 }
@@ -95,6 +114,7 @@ if (isset($_POST['subAdm'])) {
                     <input type="password" name="password" id="passwordgraveyard2013-02-10T22:37:04+00:00passwordAd" placeholder="Mot de passe"><br>
                     <input type="submit" name="subAdm" id="btn" value="Envoyer">
                     <?= $errorAd ?>
+
                 </form>
             </div>
         <?php endif ?>

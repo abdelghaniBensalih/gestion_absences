@@ -1,9 +1,38 @@
 <?php
 $title = "Inscription";
+$success = false;
 require_once "includes/header.php";
 require "config/db.php";
 
 ?>
+
+
+<?php
+  if (isset($_POST['subEtu'])) {
+    $nom = $_POST['nom'];
+    $prenom = $_POST['prenom'];
+    $apogee = $_POST['apogee'];
+    $email = $_POST['email'];
+    $password = $_POST['password'];
+    // $filiere = $_POST['filiere'];
+    $id_filiere = $_POST['filiere'];
+    $id_module = null;
+    $success = false;
+
+
+    foreach ($lignesM as $ligne2) {
+      if ($ligne2['id_filiere'] == $id_filiere) {
+        $id_module = $ligne2['id_module'];
+      }
+    }
+
+
+  $sql1 = "INSERT INTO etudiants VALUES(?,?,?,?,?,?)";
+  $stmt = $pdo->prepare($sql1);
+  $success = $stmt->execute([$apogee,$nom,$prenom,$email,$password,$id_filiere]);
+  }
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -11,6 +40,8 @@ require "config/db.php";
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Inscription</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
   <style>
     .btns3 {
       width: 600px;
@@ -41,7 +72,7 @@ require "config/db.php";
 
     #btn {
       width: 200px;
-      height: 30px;
+      height: 45px;
       border: solid 1px black;
       border-radius: 7px;
       color: blue;
@@ -95,65 +126,20 @@ require "config/db.php";
         <?php endfor ?>
       <select name="filiere" id="filiere">
        <option value="">------</option>
-<<<<<<< HEAD
-       <?php foreach($dd as $ligne){?>
-        <option value="">$ligne['nom_filiere']</option>
+       <?php foreach($lignesF as $ligne){?>
+        <option value="<?= $ligne['id_filiere'] ?>"><?=$ligne['nom']?></option>
       <?php }?>
       </select><br>
       <input type="submit" name='subEtu' id="btn" value="Envoyer">
-=======
-       <?php
-        try{
-          $pdo=new PDO("mysql:host=localhost;dbname=gestion_etudiants;charset=utf8mb4","root","",[
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-          ]);
-          echo "<p>Connexion réussie !</p>";
-        }catch (PDOException $e) {
-          die("Erreur de connexion : " . $e->getMessage());      
-        }
-        $sql="select * from filieres ";
-        $lignes=$pdo->query($sql)->fetchAll();
-       foreach($lignes as $ligne){?>
-        <option value=""><?= $ligne['nom']?></option>
-       <?php }?>
-      </select>
-      <input type="submit" name='subEtu' value="Envoyer">
->>>>>>> fa55cf813d9eb83fdb90b73bbbb9c0487cdcdc68
+      <?php if($success): ?>
+        <div class="alert alert-success py-1 m-2" role="alert" style="font-size: 0.9rem; padding: 0.25rem 0.5rem;">
+    <strong>Succès !</strong> vous êtes inscrire.
+    </div>
+      <?php endif; ?>
    </form>
-
       <p>vous avez déjà inscrire? <a href="index.php">se connecte</a></p>
     </div>
   </center>
 </body>
 
 </html>
-
-<?php
-if (isset($_POST['subEtu'])) {
-  $nom = $_POST['nom'];
-  $prenom = $_POST['prenom'];
-  $apogee = $_POST['apogee'];
-  $email = $_POST['email'];
-  $password = $_POST['password'];
-  $filiere = $_POST['filiere'];
-  $id_filiere = null;
-  $id_module = null;
-
-  foreach ($lignesF as $ligne) {
-    if ($ligne['nom'] == $filiere) {
-      $id_filiere = $ligne['id_filiere'];
-    }
-  }
-
-  foreach ($lignesM as $ligne2) {
-    if ($ligne2['id_filiere'] == $id_filiere) {
-      $id_module = $ligne2['id_module'];
-    }
-  }
-
-$sql1 = "INSERT INTO etudiants VALUES(?,?,?,?,?,?)";
-$stmt = $pdo->prepare($sql1);
-$stmt->execute([$apogee,$nom,$prenom,$email,$password,$id_filiere]);
-}
-?>
