@@ -1,15 +1,61 @@
+<!-- connexion a la base de donnees -->
 <?php
-try {
-    $pdo = new PDO("mysql:host=localhost;dbname=gestion_etudiants;charset=utf8mb4", "root", "", [
-      PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-      PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-    ]);
-  } catch (PDOException $e) {
-    die("Erreur de connexion : " . $e->getMessage());
-  }
-  
+try{
+$pdo=new PDO ("mysql:host=localhost;dbname=gestion_etudiants","root","",[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
+}
+catch(PDOException $e){
+echo $e->getMessage();
+}
+?> 
+<!-- voir liste des filieres -->
+<?php
+if(isset($_POST["vlf"])){
+$sqlf="SELECT 
+    f.nom AS nom_filiere,
+    m.nom AS nom_module
+FROM 
+    filieres f
+JOIN 
+    modules m ON f.id_filiere = m.id_filiere
+ORDER BY 
+    f.nom, m.nom;
+";
+$lignef=$pdo->query($sqlf)->fetchAll() ;
+echo '<table style="border-collapse: collapse; width: 100%; border: 1px solid black;">'.'<tr><th style="border: 1px solid black; padding: 8px;"> nom_filiere</th><th style="border: 1px solid black; padding: 8px;"> nom_module</th></tr>';
+foreach($lignef as $f){
+echo '<tr><td style="border: 1px solid black; padding: 8px;">'. $f["nom_filiere"].'</td><td style="border: 1px solid black; padding: 8px;">'. $f["nom_module"].'</td></tr>';
+}
+echo '</table>';
+}
 ?>
- 
+<!-- ajouter filier -->
+<?php
+if(isset($_POST["af"])){ ?>
+<form action="" method="POST">
+<input type="text"  placeholder="nom_filiere" name="nf"><br><br>  
+<input type="submit" >
+</form>
+<?php } ?>
+<?php if(isset($_POST["nf"])){ 
+$sqlf="insert into  filieres(nom) values (?);";
+$stmt=$pdo->prepare($sqlf);
+$stmt->execute([$_POST["nf"]]);
+} 
+?>
+<!-- suprimer filiere -->
+<?php
+if(isset($_POST["sf"])){ ?>
+<form action="" method="POST">
+<input type="text" placeholder="nom_filiere" name="nfs"><br><br>  
+<input type="submit" >
+</form>
+<?php } ?>
+<?php if(isset($_POST["nfs"])){ 
+$sqlf="delete from filieres where nom=(?);";
+$stmt=$pdo->prepare($sqlf);
+$stmt->execute([$_POST["nfs"]]);
+} 
+?>
 
 
 <!DOCTYPE html>
@@ -17,76 +63,17 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>gestion des filieres</title>
+    <title>Document</title>
 </head>
 <body>
-    <center>
-        <div class="container">
-           <h2>select une operation</h2>
-           <form action="" method="POST">
-               <button type="submit" name="a">ajout une filiere</button>
-               <button type="submit" name="m">mise a jour </button>
-               <button type="submit" name="s">supprime une filiere</button>
-           </form>
-        </div>
-        <div class="resultat">
-            <?php if($_SERVER['REQUEST_METHOD'] == 'POST') {
-                if(isset($_POST["a"])){?>
-                <form action="">
-                    <input type="text" name="nom" placeholder="entre nom"  required>
-                    <input type="submit" value="envoyer">
-                </form>
-              
-            <?php 
-                if (!empty($_POST['nom'])) {
-                    $nom = htmlspecialchars($_POST['nom']);
-                    $sqlgfilier = "insert into filieres(nom) values(:nom)";
-                    $stmt = $pdo->prepare($sqlgfilier);
-                    $stmt->bindParam(':nom', $nom, PDO::PARAM_STR);
-                    $lignegf = $stmt->execute(); 
-                    echo $lignegf ? "Filière ajoutée avec succès." : "Erreur lors de l'ajout.";
-                }
-            }elseif(isset($_POST["m"])){
-                ?>
-                <form action="">
-                    <input type="text" name="nom" placeholder="entre nom"  required>
-                    <input type="number" name="id" placeholder="entre id"  required>
-                    <input type="submit" value="envoyer">
-                </form>
-                
-                <?php if (!empty($_POST['nom'])&& !empty($_POST['id'])) {
-                    $nom = htmlspecialchars($_POST['nom']);
-                    $id = ($_POST['id']);
-                    $sqlgfilier = "update filieres set nom = :nom where id = :id";
-                    $stmt = $pdo->prepare($sqlgfilier);
-                    $lignegf = $stmt->execute();
-                    echo $lignegf ? "le mis à jour a fait." : "Erreur lors de mis à jour!!.";
-                } }elseif(isset($_POST["s"])){ ?>
-                <form action="">
-                    <input type="number" name="id" placeholder="entre id"  required>
-                    <input type="text" name="nom" placeholder="entre nom"  required>
-                    <input type="submit" value="envoyer">
-                </form>
-                <?php } if(!empty($_POST['id']) && !empty($_POST['id'])){
-                    $id = ($_POST['id']);
-                    $nom = htmlspecialchars($_POST['nom']);
-                    $sqlgfilier = "delete from filieres where id = :id and nom = :nom";
-                    $stmt = $pdo->prepare($sqlgfilier);
-                    $lignegf = $stmt->execute();
-                    echo $lignegf ? "Filière supprimée avec succès." : "Erreur lors de la suppression.";
-                }    ?>
-
-
-
-
-
-
-
-            <?php } ?>
-            
-        </div>
-    </center>
-
-    
+<center><div> 
+<form action="" method="POST">
+<?php if(!isset($_POST["vlf"]) && !isset($_POST["af"]) && !isset($_POST["sf"])) {?>
+    <input type="submit" value=" liste_filiere et module_associees" name="vlf"><br><br>
+    <input type="submit" value="ajouter_filiere" name="af"><br><br>
+    <input type="submit" value="suprimer_filiere" name="sf"><br><br>
+    <?php } ?>
+</form>
+</div></center>
 </body>
 </html>
