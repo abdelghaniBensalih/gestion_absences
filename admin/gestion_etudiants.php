@@ -60,6 +60,7 @@ $stmt->execute([$_POST["nes"]]);
 <?php if(!isset($_POST["vle"]) && !isset($_POST["se"])) {?>
     <input type="submit" value="voir_liste_etudiants" name="vle"><br><br>
     <input type="submit" value="suprimer_etudiant" name="se"><br><br>
+    <input type="submit" value="modifier_etudiant" name="me"><br><br>
     <?php } ?>
 </form>
 </div></center>

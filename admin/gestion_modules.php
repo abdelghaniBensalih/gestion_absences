@@ -60,6 +60,23 @@ $stmt=$pdo->prepare($sqlf);
 $stmt->execute([$_POST["nms"]]);
 } 
 ?>
+<!-- mettre à jour un module -->
+<?php
+if(isset($_POST["mm"])){ ?>
+<form action="" method="POST">
+<input type="text" placeholder="ancien_nom_module" name="anm"><br><br>
+<input type="text" placeholder="le nom module modifier" name="nnm"><br><br>
+<input type="text" placeholder="ancien_nom de responsable_module" name="anr"><br><br>
+<input type="text" placeholder="le nom responsable modifier" name="nnr"><br><br>
+<input type="submit" >
+</form>
+<?php } ?>
+<?php if(isset($_POST["ane"])){
+$sqlf="UPDATE  SET nom = ?,nom_responsable = ? WHERE nom = ?,nom_responsable = ?;";
+$stmt=$pdo->prepare($sqlf);
+$stmt->execute([$_POST["nnm"] ,$_POST["nnr"] ,$_POST["anm"], $_POST["anr"]]);
+}
+?>
 
 
 <!DOCTYPE html>
@@ -72,10 +89,11 @@ $stmt->execute([$_POST["nms"]]);
 <body>
 <center><div> 
 <form action="" method="POST">
-<?php if(!isset($_POST["vlm"]) && !isset($_POST["am"]) && !isset($_POST["sm"])) {?>
+<?php if(!isset($_POST["vlm"]) && !isset($_POST["am"]) && !isset($_POST["sm"]) && !isset($_POST["mm"])) {?>
     <input type="submit" value="voir_liste_module" name="vlm"><br><br>
     <input type="submit" value="ajouter_module" name="am"><br><br>
     <input type="submit" value="suprimer_modulre" name="sm"><br><br>
+    <input type="submit" value="modifier_modulre" name="mm"><br><br>
     <?php } ?>
 </form>
 </div></center>

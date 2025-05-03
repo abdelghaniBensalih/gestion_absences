@@ -56,8 +56,21 @@ $stmt=$pdo->prepare($sqlf);
 $stmt->execute([$_POST["nfs"]]);
 } 
 ?>
-
-
+<!-- mettre à jour une filière -->
+<?php
+if(isset($_POST["mf"])){ ?>
+<form action="" method="POST">
+<input type="text" placeholder="ancien_nom_filiere" name="anf"><br><br>
+<input type="text" placeholder="le nom modifier" name="nnf"><br><br>
+<input type="submit" >
+</form>
+<?php } ?>
+<?php if(isset($_POST["anf"])){
+$sqlf="UPDATE filieres SET nom = ? WHERE nom = ?;";
+$stmt=$pdo->prepare($sqlf);
+$stmt->execute([$_POST["nnf"], $_POST["anf"]]);
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -68,10 +81,11 @@ $stmt->execute([$_POST["nfs"]]);
 <body>
 <center><div> 
 <form action="" method="POST">
-<?php if(!isset($_POST["vlf"]) && !isset($_POST["af"]) && !isset($_POST["sf"])) {?>
+<?php if(!isset($_POST["vlf"]) && !isset($_POST["af"]) && !isset($_POST["sf"]) && !isset($_POST["mf"]) ) {?>
     <input type="submit" value=" liste_filiere et module_associees" name="vlf"><br><br>
     <input type="submit" value="ajouter_filiere" name="af"><br><br>
     <input type="submit" value="suprimer_filiere" name="sf"><br><br>
+    <input type="submit" value="modifier_filiere" name="mf"><br><br>
     <?php } ?>
 </form>
 </div></center>
