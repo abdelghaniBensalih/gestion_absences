@@ -20,7 +20,7 @@ if (isset($_POST['subEtu'])) {
     $password = $_POST['password'];
     $tmp = false;
     foreach ($lignes as $ligne) {
-        if ($ligne['apogee'] == $nom && $ligne['mot_de_passe'] == $password) {
+        if ($ligne['apogee'] == $nom && password_verify($password,$ligne['mot_de_passe'])) {
             $tmp = true;
         }
     }
@@ -76,10 +76,86 @@ if (isset($_POST['subAdm'])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
     <style>
-    </style>
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #ededed;
+}
+
+.loader {
+  max-width: 15rem;
+  width: 100%;
+  height: auto;
+  stroke-linecap: round;
+}
+
+circle {
+  fill: none;
+  stroke-width: 3.5;
+  animation-name: preloader;
+  animation-duration: 3s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+  transform-origin: 170px 170px;
+  will-change: transform;
+}
+
+circle:nth-of-type(1) {
+  stroke-dasharray: 550px;
+  animation-delay: -0.15s;
+}
+
+circle:nth-of-type(2) {
+  stroke-dasharray: 500px;
+  animation-delay: -0.30s;
+}
+
+circle:nth-of-type(3) {
+  stroke-dasharray: 450px;
+  animation-delay: -0.45s;
+}
+
+circle:nth-of-type(4) {
+  stroke-dasharray: 300px;
+  animation-delay: -0.60s;
+}
+
+@keyframes preloader {
+  50% {
+    transform: rotate(360deg);
+  }
+}
+
+#main-content {
+  display: none;
+}
+
+</style>
+
 </head>
 <body class="bg-light">
-    <center>
+<!-- <div id="loader">
+  <video autoplay muted>
+    <source src="assetss/animation.webm" type="video/webm">
+    Votre navigateur ne supporte pas les vidéos HTML5.
+  </video>
+</div> -->
+<center>
+    <div id="container">
+      
+      <svg class="loader" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 340">
+         <circle cx="170" cy="170" r="160" stroke="#E2007C"/>
+         <circle cx="170" cy="170" r="135" stroke="#404041"/>
+         <circle cx="170" cy="170" r="110" stroke="#E2007C"/>
+         <circle cx="170" cy="170" r="85" stroke="#404041"/>
+      </svg>
+      
+    </div>
+</center>
+<center id="main-content">
+
         <form action="" method="post">
             <ul class="nav nav-pills nav-fill gap-2 p-1 small bg-primary rounded-5 shadow-sm" id="pillNav2" role="tablist" style="--bs-nav-link-color: var(--bs-white); --bs-nav-pills-link-active-color: var(--bs-primary); --bs-nav-pills-link-active-bg: var(--bs-white);">
                 <li class="nav-item" role="presentation">
@@ -98,7 +174,8 @@ if (isset($_POST['subAdm'])) {
                     <input type="text" name="apogee" id="apogee" placeholder="Numéro Apogée"><br>
                     <label for="password">Entrer votre Mot de passe: </label><br>
                     <input type="password" name="password" id="password" placeholder="Mot de passe"><br>
-                    <input type="submit" id="btn" name="subEtu" value="Envoyer">
+                    <!-- <input type="submit" id="btn" name="subEtu" value="Envoyer"> -->
+                    <button type="submit" class="btn btn-outline-primary" name="subEtu"  value="Envoyer">Envoyer</button>
                     <?= $error ?>
                 </form>
                 <p>Vous n'êtes pas encore inscrit ? <a href="register.php">Inscription</a></p>
@@ -111,13 +188,36 @@ if (isset($_POST['subAdm'])) {
                     <label for="id">Entrer votre identifiant: </label><br>
                     <input type="text" name="id" id="id" placeholder="Nom d'utilisateur"><br>
                     <label for="passwordAd">Entrer votre Mot de passe: </label><br>
-                    <input type="password" name="password" id="passwordgraveyard2013-02-10T22:37:04+00:00passwordAd" placeholder="Mot de passe"><br>
-                    <input type="submit" name="subAdm" id="btn" value="Envoyer">
+                    <input type="password" name="password" id="passwordAd" placeholder="Mot de passe"><br>
+                    <!-- <input type="submit" name="subAdm" id="btn" value="Envoyer"> -->
+                    <button type="submit" class="btn btn-outline-primary" name="subAdm"  value="Envoyer">Envoyer</button>
                     <?= $errorAd ?>
 
                 </form>
             </div>
         <?php endif ?>
     </center>
+
+
+
+
+
+    <script>
+
+  // Si l'utilisateur n'a pas encore vu l'animation (dans cette session)
+  if (!sessionStorage.getItem('introShown')) {
+    setTimeout(() => {
+      document.getElementById('container').style.display = 'none';
+      document.getElementById('main-content').style.display = 'block';
+    }, 3000);
+    // Marquer comme "déjà vu"
+    sessionStorage.setItem('introShown', 'true');
+  } else {
+    // Ne pas afficher le container
+    document.getElementById('container').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+  }
+</script>
+
 </body>
 </html>

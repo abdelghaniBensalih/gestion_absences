@@ -9,11 +9,14 @@ require "config/db.php";
 
 <?php
   if (isset($_POST['subEtu'])) {
+  try{
+
     $nom = $_POST['nom'];
     $prenom = $_POST['prenom'];
     $apogee = $_POST['apogee'];
     $email = $_POST['email'];
     $password = $_POST['password'];
+    $passwordHash = password_hash($password, PASSWORD_DEFAULT);
     // $filiere = $_POST['filiere'];
     $id_filiere = $_POST['filiere'];
     $id_module = null;
@@ -29,7 +32,14 @@ require "config/db.php";
 
   $sql1 = "INSERT INTO etudiants VALUES(?,?,?,?,?,?)";
   $stmt = $pdo->prepare($sql1);
-  $success = $stmt->execute([$apogee,$nom,$prenom,$email,$password,$id_filiere]);
+  $success = $stmt->execute([$apogee,$nom,$prenom,$email,$passwordHash,$id_filiere]);
+  }catch(Exception $e){
+    $Erreur = <<< EOT
+            <div class="alert alert-danger py-1 m-2" role="alert" style="font-size: 0.9rem; padding: 0.25rem 0.5rem;">
+    <strong>Erreur !</strong> compte dèja exciste.
+    </div>
+EOT;
+  }
   }
 ?>
 
@@ -52,7 +62,7 @@ require "config/db.php";
       margin: 20px;
       margin-top: 50px;
       background-color: rgba(241, 241, 267);
-      box-shadow: 40px 60px 30px #d3d3d3;
+      /* box-shadow: 40px 60px 30px #d3d3d3; */
     }
 
     .btns3 input {
@@ -80,6 +90,16 @@ require "config/db.php";
       font-size: x-large;
       background-color: #0df;
       cursor: pointer;
+    }
+    .btn{
+      border-radius: 50%;
+      color:white;
+    }
+    #toright{
+      position: fixed;
+      top: 90vh;
+      right: 0;
+      padding: 20px;
     }
   </style>
 </head>
@@ -135,11 +155,35 @@ require "config/db.php";
         <div class="alert alert-success py-1 m-2" role="alert" style="font-size: 0.9rem; padding: 0.25rem 0.5rem;">
     <strong>Succès !</strong> vous êtes inscrire.
     </div>
+    <?php else: ?>
+      <?php if(isset($Erreur)): ?>
+        <?= $Erreur ?>
       <?php endif; ?>
+    <?php endif; ?>
    </form>
       <p>vous avez déjà inscrire? <a href="index.php">se connecte</a></p>
     </div>
   </center>
-</body>
 
+
+
+
+<div id="toright" >
+
+  <button class="btn" style="background-color: white;color:black;"   onclick="changeColor('white')">White</button>
+  <button class="btn" style="background-color: black;"   onclick="changeColor('black')">Black</button>
+  <button class="btn" style="background-color: gray;"    onclick="changeColor('gray')">Gray</button>
+
+</div>  
+
+
+<script>
+          function changeColor(colorName) {
+    document.body.style.background = colorName;
+}
+</script>
+
+
+
+</body>
 </html>
