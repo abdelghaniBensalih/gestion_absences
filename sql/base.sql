@@ -23,6 +23,7 @@ CREATE TABLE modules (
    nom varchar(255) not null,
    nom_responsable varchar(255),
    id_filiere INT not null,
+   semistre varchar(2) not null,
    foreign key (id_filiere) references filieres(id_filiere)
 );
 
