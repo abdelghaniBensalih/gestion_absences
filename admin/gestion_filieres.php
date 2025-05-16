@@ -1,11 +1,8 @@
 <!-- connexion a la base de donnees -->
 <?php
-try{
-$pdo=new PDO ("mysql:host=localhost;dbname=gestion_etudiants","root","",[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
-}
-catch(PDOException $e){
-echo $e->getMessage();
-}
+$title = "Gestion des filieres";
+    require_once "../includes/header.php";
+    require "../config/db.php";
 ?> 
 <!-- voir liste des filieres -->
 <?php

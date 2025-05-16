@@ -1,6 +1,7 @@
 <?php
+
 try {
-  $pdo = new PDO("mysql:host=localhost;dbname=gestion_etudiants;charset=utf8mb4", "root", "", [
+  $pdo = new PDO("mysql:host=localhost;dbname=gestion_etudiants;charset=utf8mb4", "root", "password", [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
   ]);
@@ -10,14 +11,18 @@ try {
 
 
 $sqlEtudiant = "SELECT * from etudiants ";
-$lignes = $pdo->query($sqlEtudiant)->fetchAll();
+$lignes = $pdo->query($sqlEtudiant)->fetchAll(PDO::FETCH_ASSOC);
 
 $sqlFiliere = "SELECT * from filieres ";
-$lignesF = $pdo->query($sqlFiliere)->fetchAll();
+$lignesF = $pdo->query($sqlFiliere)->fetchAll(PDO::FETCH_ASSOC);
 
 $sqlModule = "SELECT * from modules ";
-$lignesM = $pdo->query($sqlModule)->fetchAll();
+$lignesM = $pdo->query($sqlModule)->fetchAll(PDO::FETCH_ASSOC);
 
 $sqlAdmin = "SELECT * from administrateur ";
-$lignesAd = $pdo->query($sqlAdmin)->fetchAll(); 
+$lignesAd = $pdo->query($sqlAdmin)->fetchAll(PDO::FETCH_ASSOC);
 
+if (isset($_SESSION['apogee'])) {
+  $sqlDashE = "SELECT * FROM etudiants WHERE apogee = " . $_SESSION['apogee'];
+  $lignesDashE = $pdo->query($sqlDashE)->fetchAll(PDO::FETCH_ASSOC);
+}

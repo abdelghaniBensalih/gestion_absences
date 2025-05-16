@@ -4,7 +4,6 @@ USE gestion_etudiants;
 CREATE TABLE filieres(
  id_filiere INT AUTO_INCREMENT PRIMARY KEY,
  nom varchar(255) not null
-
 );
 
 CREATE TABLE etudiants (
@@ -14,7 +13,6 @@ CREATE TABLE etudiants (
  email varchar(255) not null unique ,
  mot_de_passe varchar(255) not null,
  id_filiere INT not null,
- id_module INT not null,
  foreign key (id_filiere) references filieres(id_filiere)
 );
 
