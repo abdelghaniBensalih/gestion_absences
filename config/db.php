@@ -1,7 +1,7 @@
 <?php
 
 try {
-  $pdo = new PDO("mysql:host=localhost;dbname=gestion_etudiants;charset=utf8mb4", "root", "password", [
+  $pdo = new PDO("mysql:host=localhost;dbname=gestion_absences;charset=utf8mb4", "root", "password", [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
   ]);
@@ -19,7 +19,7 @@ $lignesF = $pdo->query($sqlFiliere)->fetchAll(PDO::FETCH_ASSOC);
 $sqlModule = "SELECT * from modules ";
 $lignesM = $pdo->query($sqlModule)->fetchAll(PDO::FETCH_ASSOC);
 
-$sqlAdmin = "SELECT * from administrateur ";
+$sqlAdmin = "SELECT * from administrateurs ";
 $lignesAd = $pdo->query($sqlAdmin)->fetchAll(PDO::FETCH_ASSOC);
 
 if (isset($_SESSION['apogee'])) {
