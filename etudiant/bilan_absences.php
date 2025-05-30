@@ -1,16 +1,47 @@
 <?php
-// filepath: c:\xampp\htdocs\gestion_absences\etudiant\bilan_absences.php
 session_start();
 if ($_SESSION['auth'] != "Oui") {
     header("Location: ../index.php");
     exit();
 }
 
+require_once "../check_absences.php";
 require_once "../config/db.php";
 $title = "Bilan des absences";
 
 // Récupérer l'apogée de l'étudiant connecté
 $apogee = isset($_SESSION['apogee']) ? $_SESSION['apogee'] : $_COOKIE['apogee'];
+
+// Traitement justification d'absence
+$msg = '';
+if (isset($_POST['justifier']) && isset($_POST['id_absence'])) {
+    $idAbsence = intval($_POST['id_absence']);
+    $motif = trim($_POST['motif']);
+    $file = $_FILES['document'] ?? null;
+    $uploadDir = '../uploads/justificatifs/';
+    if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+
+    $fileName = null;
+    if ($file && $file['error'] === UPLOAD_ERR_OK) {
+        $fileType = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $allowedTypes = ['pdf', 'jpg', 'jpeg', 'png'];
+        if (in_array($fileType, $allowedTypes) && $file['size'] <= 2*1024*1024) {
+            $fileName = uniqid('justif_') . '_' . basename($file['name']);
+            $targetFile = $uploadDir . $fileName;
+            if (!move_uploaded_file($file['tmp_name'], $targetFile)) {
+                $msg = '<div class="alert alert-danger">Erreur lors de l\'upload du fichier.</div>';
+                $fileName = null;
+            }
+        } else {
+            $msg = '<div class="alert alert-danger">Fichier non valide (PDF/JPG/PNG, max 2Mo).</div>';
+        }
+    }
+    if (($fileName || $motif) && !$msg) {
+        $stmt = $pdo->prepare("UPDATE absences SET justifiee=1, motif=?, document_justificatif=?, date_justification=NOW() WHERE id_absence=? AND apogee=?");
+        $stmt->execute([$motif, $fileName, $idAbsence, $apogee]);
+        $msg = '<div class="alert alert-success">Justification envoyée avec succès.</div>';
+    }
+}
 
 // Récupérer les informations de l'étudiant
 try {
@@ -20,7 +51,7 @@ try {
                           WHERE e.apogee = ?");
     $stmt->execute([$apogee]);
     $etudiantInfo = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if ($etudiantInfo) {
         $nomComplet = $etudiantInfo['nom'] . ' ' . $etudiantInfo['prenom'];
         $filiere = $etudiantInfo['nom_filiere'];
@@ -33,28 +64,13 @@ try {
     $checkModules = $pdo->prepare("SELECT COUNT(*) FROM inscriptions WHERE id_etudiant = ?");
     $checkModules->execute([$apogee]);
     $hasModules = $checkModules->fetchColumn() > 0;
-    
+
     // Vérifier que l'étudiant a des absences
     $checkAbsences = $pdo->prepare("SELECT COUNT(*) FROM absences a JOIN seances s ON a.id_seance = s.id_seance WHERE a.apogee = ?");
     $checkAbsences->execute([$apogee]);
     $hasAbsences = $checkAbsences->fetchColumn() > 0;
-    
-    // Afficher en commentaire HTML pour le débogage
-    echo "<!-- Débogage: Modules inscrits: " . ($hasModules ? "OUI" : "NON") . " -->";
-    echo "<!-- Débogage: Absences enregistrées: " . ($hasAbsences ? "OUI" : "NON") . " -->";
-    
-    if (!$hasAbsences) {
-        // Vérifier la structure des tables
-        $checkSeances = $pdo->query("SHOW TABLES LIKE 'seances'")->rowCount();
-        $checkEtudiants = $pdo->query("SHOW TABLES LIKE 'etudiants'")->rowCount();
-        echo "<!-- Débogage: Table seances existe: " . ($checkSeances ? "OUI" : "NON") . " -->";
-        echo "<!-- Débogage: Table etudiants existe: " . ($checkEtudiants ? "OUI" : "NON") . " -->";
-        
-        // Vérifier les valeurs
-        echo "<!-- Débogage: Apogée: " . $apogee . " -->";
-    }
 } catch (PDOException $e) {
-    echo "<!-- Erreur de débogage: " . $e->getMessage() . " -->";
+    // ...
 }
 // Récupérer les absences par module
 $absencesParModule = [];
@@ -62,8 +78,6 @@ $totalAbsences = 0;
 $totalJustifiees = 0;
 
 try {
-    // Cette requête suppose que vous avez une table d'absences et de modules
-    // Ajustez selon votre structure de base de données
     $stmt = $pdo->prepare(
     "SELECT m.id_module, m.nom AS nom_module, m.code,
             COUNT(a.id_absence) AS total_absences,
@@ -76,16 +90,14 @@ try {
      WHERE i.id_etudiant = ?
      GROUP BY m.id_module, m.nom, m.code
      ORDER BY m.nom"
-);
+    );
     $stmt->execute([$apogee, $apogee]);
     $absencesParModule = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Calculer les totaux
+
     foreach ($absencesParModule as $module) {
         $totalAbsences += $module['total_absences'];
         $totalJustifiees += $module['absences_justifiees'];
     }
-    
 } catch (PDOException $e) {
     $error = "Erreur lors de la récupération des absences: " . $e->getMessage();
 }
@@ -94,7 +106,7 @@ try {
 $detailAbsences = [];
 try {
     $stmt = $pdo->prepare(
-    "SELECT a.id_absence, s.date_seance AS date_absence, a.justifiee, a.motif,
+    "SELECT a.id_absence, s.date_seance AS date_absence, a.justifiee, a.motif, a.document_justificatif,
             m.nom AS nom_module, m.code,
             s.duree, s.type_seance, s.salle
      FROM absences a
@@ -102,7 +114,7 @@ try {
      JOIN modules m ON s.id_module = m.id_module
      WHERE a.apogee = ?
      ORDER BY s.date_seance DESC"
-);
+    );
     $stmt->execute([$apogee]);
     $detailAbsences = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
@@ -117,38 +129,38 @@ $dateFin = isset($_GET['date_fin']) ? $_GET['date_fin'] : null;
 
 // Si un filtre est appliqué, ajuster la requête pour les détails d'absences
 if ($moduleId || $justifiee !== null || $dateDebut || $dateFin) {
-    $sql = "SELECT a.id_absence, s.date_seance AS date_absence, a.justifiee, a.motif,
+    $sql = "SELECT a.id_absence, s.date_seance AS date_absence, a.justifiee, a.motif, a.document_justificatif,
                   m.nom AS nom_module, m.code,
                   s.duree, s.type_seance, s.salle
            FROM absences a
            JOIN seances s ON a.id_seance = s.id_seance
            JOIN modules m ON s.id_module = m.id_module
            WHERE a.apogee = ?";
-    
+
     $params = [$apogee];
-    
+
     if ($moduleId) {
         $sql .= " AND m.id_module = ?";
         $params[] = $moduleId;
     }
-    
+
     if ($justifiee !== null) {
         $sql .= " AND a.justifiee = ?";
         $params[] = ($justifiee === "1") ? 1 : 0;
     }
-    
+
     if ($dateDebut) {
         $sql .= " AND a.date_absence >= ?";
         $params[] = $dateDebut;
     }
-    
+
     if ($dateFin) {
         $sql .= " AND a.date_absence <= ?";
         $params[] = $dateFin . ' 23:59:59';
     }
-    
+
     $sql .= " ORDER BY a.date_absence DESC";
-    
+
     try {
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
@@ -185,7 +197,7 @@ try {
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
-    <style>
+     <style>
         :root {
             --primary-color: #0f3460;
             --secondary-color: #4e8cff;
@@ -842,13 +854,11 @@ try {
                 </div>
             <?php endif; ?>
         </div>
-        
         <!-- Détail des absences -->
         <div class="card">
             <div class="card-header">
                 <h2><i class="fas fa-calendar-minus"></i> Détail des absences</h2>
             </div>
-            
             <?php if (count($detailAbsences) > 0): ?>
                 <div class="table-container">
                     <table class="table table-hover" id="absencesTable">
@@ -860,7 +870,7 @@ try {
                                 <th>Salle</th>
                                 <th>Durée</th>
                                 <th>Statut</th>
-                                <th>Motif</th>
+                                <th>Motif / Justificatif</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -883,7 +893,21 @@ try {
                                             <span class="badge-not-justified">Non justifiée</span>
                                         <?php endif; ?>
                                     </td>
-                                    <td><?= $absence['justifiee'] ? htmlspecialchars($absence['motif'] ?? '-') : '-' ?></td>
+                                    <td>
+                                        <?php if ($absence['justifiee']): ?>
+                                            <?= htmlspecialchars($absence['motif'] ?? '-') ?>
+                                            <?php if (!empty($absence['document_justificatif'])): ?>
+                                                <a href="../uploads/justificatifs/<?= urlencode($absence['document_justificatif']) ?>" target="_blank" class="btn btn-link btn-sm">Voir justificatif</a>
+                                            <?php endif; ?>
+                                        <?php else: ?>
+                                            <form method="post" enctype="multipart/form-data" style="display:inline;">
+                                                <input type="hidden" name="id_absence" value="<?= $absence['id_absence'] ?>">
+                                                <input type="text" name="motif" class="form-control mb-1" placeholder="Motif" required>
+                                                <input type="file" name="document" class="form-control mb-1" accept="application/pdf,image/*" required>
+                                                <button type="submit" name="justifier" class="btn btn-success btn-sm">Justifier</button>
+                                            </form>
+                                        <?php endif; ?>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -897,7 +921,8 @@ try {
             <?php endif; ?>
         </div>
     </div>
-
+    <!-- ... (le reste de tes scripts JS inchangés) ... -->
+     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>

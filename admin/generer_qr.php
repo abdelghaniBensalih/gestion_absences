@@ -316,7 +316,7 @@ select.form-select {
                         
                         <div class="mb-3">
                             <label for="duree" class="form-label">Durée (minutes)</label>
-                            <input type="number" class="form-control" id="duree" name="duree" value="120" min="1" step="15" required>
+                            <input type="number" class="form-control" id="duree" name="duree" value="120" min="3" step="15" required>
                         </div>
                         
                         <div class="mb-3">
@@ -327,7 +327,7 @@ select.form-select {
                         <div class="mb-3">
                             <label for="type_seance" class="form-label">Type de séance</label>
                             <select class="form-select" id="type_seance" name="type_seance" required>
-                                <option value="CM">Cours Magistral (CM)</option>
+                                <option value="Cours">Cours Magistral (CM)</option>
                                 <option value="TD">Travaux Dirigés (TD)</option>
                                 <option value="TP">Travaux Pratiques (TP)</option>
                             </select>

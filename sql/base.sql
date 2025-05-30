@@ -1,96 +1,94 @@
--- Renommer la base de données pour cohérence
-CREATE DATABASE gestion_absences;
+CREATE DATABASE IF NOT EXISTS gestion_absences CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE gestion_absences;
 
-CREATE TABLE filieres (
-    id_filiere INT AUTO_INCREMENT PRIMARY KEY,
-    nom VARCHAR(255) NOT NULL,
-    code VARCHAR(20) UNIQUE
-);
-
-CREATE TABLE etudiants (
-    apogee INT PRIMARY KEY,
-    nom VARCHAR(255) NOT NULL,
-    prenom VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    mot_de_passe VARCHAR(255) NOT NULL, -- Stocker des hash bcrypt
-    id_filiere INT NOT NULL,
-    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_filiere) REFERENCES filieres(id_filiere)
-);
-
-CREATE TABLE administrateurs (
-    id_administrateur INT AUTO_INCREMENT PRIMARY KEY,
-    nom VARCHAR(255),
-    prenom VARCHAR(255),
-    email VARCHAR(255) UNIQUE,
-    mot_de_passe VARCHAR(255) NOT NULL, -- Stocker des hash bcrypt
-    date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE modules (
-    id_module INT AUTO_INCREMENT PRIMARY KEY,
-    nom VARCHAR(255) NOT NULL,
-    code VARCHAR(20) UNIQUE,
-    nom_responsable VARCHAR(255),
-    id_filiere INT NOT NULL,
-    semestre VARCHAR(2) NOT NULL,
-    FOREIGN KEY (id_filiere) REFERENCES filieres(id_filiere)
-);
-
-CREATE TABLE inscriptions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    id_etudiant INT NOT NULL,
-    id_module INT NOT NULL,
-    annee_academique VARCHAR(9) NOT NULL DEFAULT '2024-2025',
-    FOREIGN KEY (id_etudiant) REFERENCES etudiants(apogee),
-    FOREIGN KEY (id_module) REFERENCES modules(id_module),
-    UNIQUE KEY (id_etudiant, id_module, annee_academique)
-);
-
--- Nouvelle table pour les séances de cours
-CREATE TABLE seances (
-    id_seance INT AUTO_INCREMENT PRIMARY KEY,
-    id_module INT NOT NULL,
-    date_seance DATETIME NOT NULL,
-    duree INT NOT NULL, -- en minutes
-    salle VARCHAR(50),
-    type_seance ENUM('CM', 'TD', 'TP') NOT NULL,
-    FOREIGN KEY (id_module) REFERENCES modules(id_module)
-);
-
-CREATE TABLE presences (
-    id_presence INT AUTO_INCREMENT PRIMARY KEY,
-    id_seance INT NOT NULL,
-    apogee INT NOT NULL,
-    heure_presence DATETIME NOT NULL,
-    mode_presence ENUM('QR', 'Manuel') NOT NULL DEFAULT 'QR',
-    FOREIGN KEY (id_seance) REFERENCES seances(id_seance),
-    FOREIGN KEY (apogee) REFERENCES etudiants(apogee),
-    UNIQUE KEY (id_seance, apogee)
-);
-
+-- Table: absences
 CREATE TABLE absences (
-    id_absence INT AUTO_INCREMENT PRIMARY KEY,
-    id_seance INT NOT NULL,
-    apogee INT NOT NULL,
-    justifiee BOOLEAN DEFAULT FALSE,
-    motif TEXT,
-    document_justificatif VARCHAR(255), -- Chemin vers le document
-    date_justification DATETIME,
-    validee_par INT, -- ID administrateur qui a validé
-    FOREIGN KEY (id_seance) REFERENCES seances(id_seance),
-    FOREIGN KEY (apogee) REFERENCES etudiants(apogee),
-    FOREIGN KEY (validee_par) REFERENCES administrateurs(id_administrateur),
-    UNIQUE KEY (id_seance, apogee)
-);
+  id_absence INT(11) NOT NULL AUTO_INCREMENT,
+  id_seance INT(11) NOT NULL,
+  apogee INT(11) NOT NULL,
+  justifiee TINYINT(1) DEFAULT 0,
+  motif TEXT DEFAULT NULL,
+  document_justificatif VARCHAR(255) DEFAULT NULL,
+  date_justification DATETIME DEFAULT NULL,
+  validee_par INT(11) DEFAULT NULL,
+  PRIMARY KEY (id_absence),
+  UNIQUE KEY unique_absence (apogee, id_seance)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Table pour l'historique des connexions (sécurité)
-CREATE TABLE connexions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_type ENUM('etudiant', 'administrateur') NOT NULL,
-    user_id INT NOT NULL,
-    date_connexion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    adresse_ip VARCHAR(45) NOT NULL,
-    user_agent TEXT
-);
+-- Table: administrateurs
+CREATE TABLE `administrateurs` (
+  `id_administrateur` int NOT NULL,
+  `nom` varchar(255) DEFAULT NULL,
+  `prenom` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `mot_de_passe` varchar(255) NOT NULL,
+  `date_creation` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Table: connexions
+CREATE TABLE `connexions` (
+  `id` int NOT NULL,
+  `user_type` enum('etudiant','administrateur') NOT NULL,
+  `user_id` int NOT NULL,
+  `date_connexion` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `adresse_ip` varchar(45) NOT NULL,
+  `user_agent` text
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Table: etudiants
+CREATE TABLE `etudiants` (
+  `apogee` int NOT NULL,
+  `nom` varchar(255) NOT NULL,
+  `prenom` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `mot_de_passe` varchar(255) NOT NULL,
+  `id_filiere` int NOT NULL,
+  `date_creation` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Table: filieres
+CREATE TABLE `filieres` (
+  `id_filiere` int NOT NULL,
+  `nom` varchar(255) NOT NULL,
+  `code` varchar(20) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Table: inscriptions
+CREATE TABLE `inscriptions` (
+  `id` int NOT NULL,
+  `id_etudiant` int NOT NULL,
+  `id_module` int NOT NULL,
+  `annee_academique` varchar(9) NOT NULL DEFAULT '2024-2025'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Table: modules
+CREATE TABLE `modules` (
+  `id_module` int NOT NULL,
+  `nom` varchar(255) NOT NULL,
+  `code` varchar(20) DEFAULT NULL,
+  `nom_responsable` varchar(255) DEFAULT NULL,
+  `id_filiere` int NOT NULL,
+  `semestre` varchar(2) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Table: presences
+CREATE TABLE `presences` (
+  `id_presence` int NOT NULL,
+  `id_seance` int NOT NULL,
+  `apogee` int NOT NULL,
+  `heure_presence` datetime NOT NULL,
+  `mode_presence` enum('QR','Manuel') NOT NULL DEFAULT 'QR'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Table: seances
+CREATE TABLE `seances` (
+  `id_seance` INT NOT NULL AUTO_INCREMENT,
+  `id_module` INT NOT NULL,
+  `date_seance` DATETIME NOT NULL,
+  `duree` INT NOT NULL,
+  `salle` VARCHAR(50) DEFAULT NULL,
+  `type_seance` ENUM('CM','TD','TP') NOT NULL,
+  `absences_generees` TINYINT(1) DEFAULT '0',
+  PRIMARY KEY (`id_seance`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

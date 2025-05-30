@@ -13,20 +13,33 @@ $etudiantId = isset($_GET['etudiant']) ? intval($_GET['etudiant']) : null;
 $date = isset($_GET['date']) ? $_GET['date'] : null;
 $justifiee = isset($_GET['justifiee']) ? $_GET['justifiee'] : null;
 
-// Traitement de la justification d'absence
+// Traitement de la justification d'absence (avec upload de document)
 if(isset($_POST['justifier_absence'])) {
     $absenceId = isset($_POST['absence_id']) ? intval($_POST['absence_id']) : 0;
     $motif = isset($_POST['motif']) ? trim($_POST['motif']) : '';
-    $document = ""; // À implémenter: téléchargement de document
-    
+    $document = "";
+
+    // Gestion de l'upload du justificatif
+    if (isset($_FILES['document']) && $_FILES['document']['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = '../uploads/justificatifs/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+        $fileType = strtolower(pathinfo($_FILES['document']['name'], PATHINFO_EXTENSION));
+        $allowedTypes = ['pdf', 'jpg', 'jpeg', 'png'];
+        if (in_array($fileType, $allowedTypes) && $_FILES['document']['size'] <= 2*1024*1024) {
+            $document = uniqid('justif_') . '_' . basename($_FILES['document']['name']);
+            $targetFile = $uploadDir . $document;
+            move_uploaded_file($_FILES['document']['tmp_name'], $targetFile);
+        }
+    }
+
     try {
         // Récupérer l'ID administrateur depuis la session
-        session_start(); // Si pas déjà fait
-        $adminId = isset($_SESSION['id_administrateur']) ? $_SESSION['id_administrateur'] : 1; // Utiliser 1 par défaut pour le test
-        
-        $stmt = $pdo->prepare("UPDATE absences SET justifiee = 1, motif = ?, date_justification = NOW(), validee_par = ? WHERE id_absence = ?");
-        $stmt->execute([$motif, $adminId, $absenceId]); // Exécuter avec les paramètres
-        
+        session_start();
+        $adminId = isset($_SESSION['id_administrateur']) ? $_SESSION['id_administrateur'] : 1;
+
+        $stmt = $pdo->prepare("UPDATE absences SET justifiee = 1, motif = ?, document_justificatif = ?, date_justification = NOW(), validee_par = ? WHERE id_absence = ? AND justifiee = 0");
+        $stmt->execute([$motif, $document, $adminId, $absenceId]);
+
         if($stmt->rowCount() > 0) {
             $successMessage = "L'absence a été justifiée avec succès.";
         } else {
@@ -40,8 +53,7 @@ if(isset($_POST['justifier_absence'])) {
 // Récupérer les données pour les filtres
 try {
     $stmtModules = $pdo->query("SELECT id_module, nom, code FROM modules ORDER BY nom");
-$modules = $stmtModules->fetchAll(PDO::FETCH_ASSOC);
-    echo "<!-- Nombre de modules trouvés: " . count($modules) . " -->";
+    $modules = $stmtModules->fetchAll(PDO::FETCH_ASSOC);
     $stmtEtudiants = $pdo->query("SELECT apogee, nom, prenom FROM etudiants ORDER BY nom, prenom");
     $etudiants = $stmtEtudiants->fetchAll(PDO::FETCH_ASSOC);
 } catch(PDOException $e) {
@@ -49,7 +61,7 @@ $modules = $stmtModules->fetchAll(PDO::FETCH_ASSOC);
 }
 
 // Construire la requête pour les absences avec filtres
-$sql = "SELECT a.id_absence, a.justifiee, a.motif, a.date_justification,
+$sql = "SELECT a.id_absence, a.justifiee, a.motif, a.document_justificatif, a.date_justification,
                e.apogee, e.nom AS etudiant_nom, e.prenom AS etudiant_prenom, 
                m.id_module, m.nom AS module_nom, m.code AS module_code,
                s.date_seance, s.salle, s.type_seance, s.duree,
@@ -78,7 +90,7 @@ if ($date) {
     $params[] = $date;
 }
 
-if ($justifiee !== null) {
+if ($justifiee !== null && $justifiee !== "") {
     $sql .= " AND a.justifiee = ?";
     $params[] = $justifiee;
 }
@@ -108,7 +120,7 @@ try {
     <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -117,11 +129,7 @@ try {
             min-height: 100vh;
             padding-bottom: 2rem;
         }
-        
-        .container {
-            padding-top: 2rem;
-        }
-        
+        .container { padding-top: 2rem; }
         .card {
             background: rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(10px);
@@ -132,12 +140,10 @@ try {
             animation: fadeIn 0.6s ease-out;
             margin-bottom: 2rem;
         }
-        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
         .card-header {
             background: rgba(255, 255, 255, 0.05);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -145,33 +151,11 @@ try {
             padding: 1rem;
             margin: -2rem -2rem 1.5rem -2rem;
         }
-        
-        .card-title {
-            margin: 0;
-            font-weight: 600;
-            color: #fff;
-            font-size: 1.5rem;
-        }
-        
-        .btn-custom {
-            transition: all 0.3s ease;
-            border: none;
-            font-weight: 500;
-        }
-        
-        .btn-custom:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #4e8cff, #3a70e3);
-        }
-        
-        .btn-success {
-            background: linear-gradient(135deg, #10b981, #059669);
-        }
-        
+        .card-title { margin: 0; font-weight: 600; color: #fff; font-size: 1.5rem; }
+        .btn-custom { transition: all 0.3s ease; border: none; font-weight: 500; }
+        .btn-custom:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); }
+        .btn-primary { background: linear-gradient(135deg, #4e8cff, #3a70e3); }
+        .btn-success { background: linear-gradient(135deg, #10b981, #059669); }
         .form-control, .form-select {
             background-color: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -179,58 +163,25 @@ try {
             border-radius: 8px;
             transition: all 0.3s;
         }
-        
         .form-control:focus, .form-select:focus {
             background-color: rgba(255, 255, 255, 0.15);
             border-color: rgba(255, 255, 255, 0.3);
             box-shadow: 0 0 0 3px rgba(78, 140, 255, 0.25);
             color: #fff;
         }
-        
-        .form-label {
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-        }
-        
-        .table {
-            color: #fff;
-        }
-        
+        .form-label { font-weight: 500; margin-bottom: 0.5rem; }
+        .table { color: #fff; }
         .table thead th {
             background-color: rgba(255, 255, 255, 0.1);
             border-color: rgba(255, 255, 255, 0.1);
             font-weight: 600;
         }
-        
-        .table tbody tr {
-            border-color: rgba(255, 255, 255, 0.05);
-        }
-        
-        .table tbody tr:hover {
-            background-color: rgba(255, 255, 255, 0.05);
-        }
-        
-        .badge {
-            font-weight: 500;
-            padding: 0.5em 0.8em;
-            border-radius: 6px;
-        }
-        
-        .badge-success {
-            background-color: #10b981;
-        }
-        
-        .badge-danger {
-            background-color: #ef4444;
-        }
-        
-        .toolbar-btns {
-            margin-bottom: 1.5rem;
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-        
+        .table tbody tr { border-color: rgba(255, 255, 255, 0.05); }
+        .table tbody tr:hover { background-color: rgba(255, 255, 255, 0.05); }
+        .badge { font-weight: 500; padding: 0.5em 0.8em; border-radius: 6px; }
+        .badge-success { background-color: #10b981; }
+        .badge-danger { background-color: #ef4444; }
+        .toolbar-btns { margin-bottom: 1.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
         .modal-content {
             background: rgba(26, 26, 46, 0.95);
             backdrop-filter: blur(10px);
@@ -238,103 +189,37 @@ try {
             border-radius: 15px;
             color: #fff;
         }
-        
-        .modal-header {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .modal-footer {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .modal-title {
-            font-weight: 600;
-            color: #fff;
-        }
-        
-        .alert {
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-            border: none;
-        }
-        
+        .modal-header { border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .modal-footer { border-top: 1px solid rgba(255, 255, 255, 0.1); }
+        .modal-title { font-weight: 600; color: #fff; }
+        .alert { border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; border: none; }
         .alert-success {
             background-color: rgba(16, 185, 129, 0.2);
             border-left: 4px solid #10b981;
             color: #fff;
         }
-        
         .alert-danger {
             background-color: rgba(239, 68, 68, 0.2);
             border-left: 4px solid #ef4444;
             color: #fff;
         }
-        
-        .dataTable tbody tr td {
-            vertical-align: middle;
-        }
-        
-        .btn-sm {
-            padding: 0.25rem 0.5rem;
-            font-size: 0.875rem;
-            border-radius: 0.2rem;
-        }
+        .dataTable tbody tr td { vertical-align: middle; }
+        .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.875rem; border-radius: 0.2rem; }
         select option {
-    background-color: #1a1a2e; /* Fond foncé */
-    color: #fff; /* Texte blanc */
-}
-
-/* Ajuster le style pour les options sélectionnées */
-select option:checked, 
-select option:hover {
-    background-color: #3a70e3; /* Bleu pour la sélection */
-    color: #fff;
-}
-
-/* Pour Firefox */
-select {
-    color: #fff;
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-/* Pour Chrome/Safari/Edge - forcer la couleur des options */
-select.form-select {
-    color-scheme: dark;
-}
-/* Style spécifique pour la liste déroulante des étudiants */
-#etudiant option {
-    background-color: #1a1a2e !important; 
-    color: #ffffff !important;
-}
-
-/* Rendre plus visible le texte dans toutes les listes déroulantes */
-select option {
-    background-color: #1a1a2e !important; 
-    color: #ffffff !important;
-    text-shadow: 0 0 0 #ffffff; /* Ajoute un effet de netteté au texte */
-}
-
-/* Assurer que la couleur du texte reste visible même avec les règles du navigateur */
-@-moz-document url-prefix() {
-    select {
-        color: #ffffff;
-    }
-    select option {
-        color: #ffffff !important;
-    }
-}
-
-/* Pour Chrome et Safari - forcer le contraste */
-@media screen and (-webkit-min-device-pixel-ratio:0) {
-    select {
-        background-color: rgba(26, 26, 46, 0.9) !important;
-    }
-    select option {
-        background-color: #1a1a2e !important;
-        color: #ffffff !important;
-    }
-}
+            background-color: #1a1a2e !important; 
+            color: #ffffff !important;
+            text-shadow: 0 0 0 #ffffff;
+        }
+        select.form-select { color-scheme: dark; }
+        #etudiant option { background-color: #1a1a2e !important; color: #ffffff !important; }
+        @-moz-document url-prefix() {
+            select { color: #ffffff; }
+            select option { color: #ffffff !important; }
+        }
+        @media screen and (-webkit-min-device-pixel-ratio:0) {
+            select { background-color: rgba(26, 26, 46, 0.9) !important; }
+            select option { background-color: #1a1a2e !important; color: #ffffff !important; }
+        }
     </style>
 </head>
 <body>
@@ -461,6 +346,11 @@ select option {
                                                 Justifier
                                             </button>
                                         <?php else: ?>
+                                            <?php if (!empty($absence['document_justificatif'])): ?>
+                                                <a href="../uploads/justificatifs/<?= urlencode($absence['document_justificatif']) ?>" target="_blank" class="btn btn-sm btn-info">
+                                                    <i class="fas fa-file-download"></i> Justificatif
+                                                </a>
+                                            <?php endif; ?>
                                             <button class="btn btn-sm btn-info" onclick="voirJustification(<?= $absence['id_absence'] ?>, '<?= htmlspecialchars($absence['motif']) ?>', '<?= date('d/m/Y', strtotime($absence['date_justification'])) ?>', '<?= htmlspecialchars($absence['admin_nom'] . ' ' . $absence['admin_prenom']) ?>')">
                                                 Détails
                                             </button>
@@ -483,7 +373,7 @@ select option {
                     <h5 class="modal-title">Justifier une absence</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form method="POST" action="">
+                <form method="POST" action="" enctype="multipart/form-data">
                     <div class="modal-body">
                         <input type="hidden" name="absence_id" id="absence_id">
                         <div class="mb-3">
@@ -494,12 +384,10 @@ select option {
                             <label for="motif" class="form-label">Motif de justification</label>
                             <textarea class="form-control" name="motif" id="motif" rows="3" required></textarea>
                         </div>
-                        <!-- Pour une future implémentation: téléchargement de document
                         <div class="mb-3">
                             <label for="document" class="form-label">Document justificatif</label>
-                            <input type="file" class="form-control" name="document" id="document">
+                            <input type="file" class="form-control" name="document" id="document" accept="application/pdf,image/*">
                         </div>
-                        -->
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
@@ -554,28 +442,22 @@ select option {
                 pageLength: 15,
                 responsive: true
             });
-            
-            // Fade-out des messages d'alerte après 5 secondes
             setTimeout(function() {
                 $('.alert').fadeOut('slow');
             }, 5000);
         });
-        
-        // Fonction pour ouvrir le modal de justification
         function justifierAbsence(id, nom) {
             document.getElementById('absence_id').value = id;
             document.getElementById('etudiant_name').value = nom;
-            
+            document.getElementById('motif').value = '';
+            document.getElementById('document').value = '';
             const modal = new bootstrap.Modal(document.getElementById('justifierModal'));
             modal.show();
         }
-        
-        // Fonction pour voir les détails d'une justification
         function voirJustification(id, motif, date, admin) {
             document.getElementById('detail_motif').textContent = motif || 'Non spécifié';
             document.getElementById('detail_date').textContent = date;
             document.getElementById('detail_admin').textContent = admin || 'Non spécifié';
-            
             const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
             modal.show();
         }
