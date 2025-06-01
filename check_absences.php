@@ -83,12 +83,12 @@ function processSeance($seance, $pdo) {
                         $mail->isSMTP();
                           $mail->Host = 'smtp.gmail.com';
                           $mail->SMTPAuth = true;
-                          $mail->Username = 'email administration'; // Remplacez par l'email de l'administration
-                          $mail->Password = 'password ici'; // App password recommandé
+                          $mail->Username = 'oukikredouane21@gmail.com'; // Remplacez par l'email de l'administration
+                          $mail->Password = 'fxbg tmyd lxru ibwj'; // App password recommandé
                          $mail->SMTPSecure = 'tls';
                          $mail->Port = 587;
 
-                           $mail->setFrom('email admin ici', 'Administration');
+                           $mail->setFrom('oukikredouane21@gmail.com', 'Administration');
                             $mail->addAddress($etuInfo['email'], $etuInfo['nom'].' '.$etuInfo['prenom']);
 
                             $mail->isHTML(true);

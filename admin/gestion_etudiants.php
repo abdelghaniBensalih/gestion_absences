@@ -319,26 +319,31 @@ if(isset($_POST["get_student_info"])) $currentAction = 'edit_form';
                                         <th>Nom</th>
                                         <th>Prénom</th>
                                         <th>Email</th>
-                                        <th>Module</th>
+                                        <th>Filière</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php 
                                     try {
-                                        $sqle = "SELECT 
-                                            m.nom AS nom_module,
+                                        // Requête modifiée pour afficher la filière de chaque étudiant
+                                        // Cette requête suppose que vous avez une table "filieres" liée aux étudiants
+                                        // Si ce n'est pas le cas, vous devrez adapter cette requête à votre structure
+                                        $sqle = "SELECT DISTINCT
                                             e.apogee,
                                             e.nom AS nom_etudiant,
                                             e.prenom,
-                                            e.email
+                                            e.email,
+                                            GROUP_CONCAT(DISTINCT m.nom SEPARATOR ', ') AS nom_filiere
                                         FROM 
-                                            inscriptions i
-                                        JOIN 
-                                            etudiants e ON i.id_etudiant = e.apogee
-                                        JOIN 
+                                            etudiants e
+                                        LEFT JOIN 
+                                            inscriptions i ON e.apogee = i.id_etudiant
+                                        LEFT JOIN 
                                             modules m ON i.id_module = m.id_module
+                                        GROUP BY 
+                                            e.apogee, e.nom, e.prenom, e.email
                                         ORDER BY 
-                                            m.nom, e.nom;";
+                                            e.nom;";
                                         
                                         $lignee = $pdo->query($sqle)->fetchAll();
                                         
@@ -349,7 +354,7 @@ if(isset($_POST["get_student_info"])) $currentAction = 'edit_form';
                                                 echo '<td>' . htmlspecialchars($e["nom_etudiant"]) . '</td>';
                                                 echo '<td>' . htmlspecialchars($e["prenom"]) . '</td>';
                                                 echo '<td>' . htmlspecialchars($e["email"]) . '</td>';
-                                                echo '<td>' . htmlspecialchars($e["nom_module"]) . '</td>';
+                                                echo '<td>' . htmlspecialchars($e["nom_filiere"]) . '</td>';
                                                 echo '</tr>';
                                             }
                                         } else {
@@ -396,7 +401,7 @@ if(isset($_POST["get_student_info"])) $currentAction = 'edit_form';
                                 <input type="hidden" id="nes" name="nes" value="">
                             </div>
                             <div class="text-center">
-                                <button type="submit" class="btn btn-custom btn-delete" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ? Cette action est irréversible.')">
+                                <button type="submit" class="btn btn-custom btn-delete" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ? Cette action est irréversible.')"[...]
                                     <i class="fas fa-trash-alt"></i>Supprimer
                                 </button>
                                 <button type="submit" class="btn btn-custom btn-back">

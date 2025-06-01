@@ -663,6 +663,69 @@ try {
         background-color: var(--dark-color) !important;
     }
 }
+
+
+
+
+
+
+/* CSS pour un thème clair pour le tableau des absences */
+#absencesTable {
+    background-color: white;
+    color: #333;
+}
+
+#absencesTable thead th {
+    background-color: #f0f0f0;
+    color: #333;
+    border-bottom: 1px solid #ddd;
+    font-weight: 500;
+}
+
+#absencesTable tbody tr {
+    background-color: white;
+    border-bottom: 1px solid #eee;
+}
+
+#absencesTable tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.table-container {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Style pour les éléments de formulaire dans le tableau */
+#absencesTable .form-control {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    color: #333;
+}
+
+#absencesTable .btn-success {
+    background-color: var(--success-color);
+    border: none;
+}
+
+#absencesTable .btn-link {
+    color: var(--info-color);
+}
+
+/* Maintenir les badges colorés */
+#absencesTable .badge-justified,
+#absencesTable .badge-not-justified {
+    color: white;
+}
+
+/* Style pour la partie justification */
+#absencesTable input[type="text"],
+#absencesTable input[type="file"] {
+    background-color: white;
+    border: 1px solid #ddd;
+    color: #333;
+}
     </style>
 </head>
 <body>
