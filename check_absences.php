@@ -1,10 +1,11 @@
 <?php
 require_once "../config/db.php";
+// Inclure la bibliothèque PHPMailer
+require 'lib/PHPMailer/vendor/autoload.php';
 
-/**
- * Script qui vérifie les séances terminées et génère les absences
- * pour les étudiants qui n'ont pas enregistré leur présence
- */
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 
 // Récupérer les séances terminées qui n'ont pas encore été traitées pour les absences
 $now = date('Y-m-d H:i:s');
@@ -13,7 +14,7 @@ $sql = "SELECT s.id_seance, s.id_module, s.date_seance, s.duree, s.type_seance,
         FROM seances s
         JOIN modules m ON s.id_module = m.id_module
         WHERE DATE_ADD(s.date_seance, INTERVAL s.duree MINUTE) <= ?
-        AND s.absences_generees = 0";  // Ajout d'un flag pour éviter de traiter plusieurs fois
+        AND s.absences_generees = 0";
 
 try {
     $stmt = $pdo->prepare($sql);
@@ -34,16 +35,13 @@ try {
     echo "<!-- Erreur: " . $e->getMessage() . " -->\n";
 }
 
-/**
- * Traite une séance terminée en générant les absences
- */
+// Fonction qui traite une séance terminée en générant les absences
 function processSeance($seance, $pdo) {
     $seanceId = $seance['id_seance'];
     $moduleId = $seance['id_module'];
-    $filiereId = $seance['id_filiere'];
-    
+
     try {
-        // 1. Récupérer tous les étudiants inscrits à ce module
+        // 1. Étudiants inscrits à ce module
         $stmtEtudiants = $pdo->prepare(
             "SELECT e.apogee 
              FROM etudiants e 
@@ -53,14 +51,14 @@ function processSeance($seance, $pdo) {
         $stmtEtudiants->execute([$moduleId]);
         $etudiants = $stmtEtudiants->fetchAll(PDO::FETCH_ASSOC);
         
-        // 2. Récupérer les étudiants qui ont déjà enregistré leur présence
+        // 2. Étudiants présents
         $stmtPresents = $pdo->prepare(
             "SELECT apogee FROM presences WHERE id_seance = ?"
         );
         $stmtPresents->execute([$seanceId]);
         $presents = $stmtPresents->fetchAll(PDO::FETCH_COLUMN);
         
-        // 3. Générer les absences pour les étudiants qui n'ont pas enregistré de présence
+        // 3. Générer les absences
         $stmtInsertAbsence = $pdo->prepare(
             "INSERT INTO absences (id_seance, apogee, justifiee) VALUES (?, ?, 0)"
         );
@@ -72,25 +70,57 @@ function processSeance($seance, $pdo) {
                 try {
                     $stmtInsertAbsence->execute([$seanceId, $apogee]);
                     $absencesCount++;
+
+                    // 4. Récupérer email de l'étudiant
+                    $stmtMail = $pdo->prepare("SELECT email, nom, prenom FROM etudiants WHERE apogee = ?");
+                    $stmtMail->execute([$apogee]);
+                    $etuInfo = $stmtMail->fetch(PDO::FETCH_ASSOC);
+
+                    if ($etuInfo && !empty($etuInfo['email'])) {
+                        $mail = new PHPMailer(true);
+                        try {
+                        
+                        $mail->isSMTP();
+                          $mail->Host = 'smtp.gmail.com';
+                          $mail->SMTPAuth = true;
+                          $mail->Username = 'email administration'; // Remplacez par l'email de l'administration
+                          $mail->Password = 'password ici'; // App password recommandé
+                         $mail->SMTPSecure = 'tls';
+                         $mail->Port = 587;
+
+                           $mail->setFrom('email admin ici', 'Administration');
+                            $mail->addAddress($etuInfo['email'], $etuInfo['nom'].' '.$etuInfo['prenom']);
+
+                            $mail->isHTML(true);
+                            $mail->Subject = "Absence a justifier";
+                            $mail->Body = "Bonjour {$etuInfo['prenom']} {$etuInfo['nom']},<br>
+                            Vous etiez absent à la séance du <b>{$seance['date_seance']}</b>.<br>
+                            Merci de justifier votre absence le plus tôt possible via la platefoforme Espace Etdiant.";
+
+                            $mail->send();
+                        } catch (Exception $e) {
+                            error_log("Erreur mail {$etuInfo['email']}: " . $mail->ErrorInfo);
+                        }
+                    }
+
                 } catch (PDOException $e) {
-                    // Ignorer les doublons (constraint violations)
                     if ($e->getCode() != 23000) {
                         throw $e;
                     }
                 }
             }
         }
-        
-        // 4. Marquer la séance comme traitée
+
+        // 5. Marquer la séance comme traitée
         $stmtUpdateSeance = $pdo->prepare(
             "UPDATE seances SET absences_generees = 1 WHERE id_seance = ?"
         );
         $stmtUpdateSeance->execute([$seanceId]);
-        
+
         echo "<!-- Séance #$seanceId: $absencesCount absences générées -->\n";
-        
+
     } catch (PDOException $e) {
-        error_log("Erreur lors du traitement de la séance #$seanceId: " . $e->getMessage());
+        error_log("Erreur séance #$seanceId: " . $e->getMessage());
         echo "<!-- Erreur séance #$seanceId: " . $e->getMessage() . " -->\n";
     }
 }

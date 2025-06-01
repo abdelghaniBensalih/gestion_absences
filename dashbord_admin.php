@@ -28,7 +28,7 @@ try {
     $totalFilieres = $stmtFilieres->fetch()['total'];
     
     // Nombre total d'absences
-    $stmtAbsences = $pdo->query("SELECT COUNT(*) as total FROM absence_info");
+    $stmtAbsences = $pdo->query("SELECT COUNT(*) as total FROM absences");
     $totalAbsences = $stmtAbsences->fetch()['total'];
 } catch (PDOException $e) {
     $totalEtudiants = "N/A";
