@@ -324,41 +324,43 @@ if(isset($_POST["get_student_info"])) $currentAction = 'edit_form';
                                 </thead>
                                 <tbody>
                                     <?php 
-                                    try {
-                                        $sqle = "SELECT 
-                                            m.nom AS nom_module,
-                                            e.apogee,
-                                            e.nom AS nom_etudiant,
-                                            e.prenom,
-                                            e.email
-                                        FROM 
-                                            inscriptions i
-                                        JOIN 
-                                            etudiants e ON i.id_etudiant = e.apogee
-                                        JOIN 
-                                            modules m ON i.id_module = m.id_module
-                                        ORDER BY 
-                                            m.nom, e.nom;";
-                                        
-                                        $lignee = $pdo->query($sqle)->fetchAll();
-                                        
-                                        if (count($lignee) > 0) {
-                                            foreach($lignee as $e) {
-                                                echo '<tr>';
-                                                echo '<td>' . htmlspecialchars($e["apogee"]) . '</td>';
-                                                echo '<td>' . htmlspecialchars($e["nom_etudiant"]) . '</td>';
-                                                echo '<td>' . htmlspecialchars($e["prenom"]) . '</td>';
-                                                echo '<td>' . htmlspecialchars($e["email"]) . '</td>';
-                                                echo '<td>' . htmlspecialchars($e["nom_module"]) . '</td>';
-                                                echo '</tr>';
-                                            }
-                                        } else {
-                                            echo '<tr><td colspan="5" class="text-center">Aucun étudiant inscrit trouvé</td></tr>';
-                                        }
-                                    } catch(PDOException $e) {
-                                        echo '<tr><td colspan="5" class="text-center text-danger">Erreur: ' . $e->getMessage() . '</td></tr>';
-                                    }
-                                    ?>
+try {
+    $sqle = "SELECT 
+                e.apogee,
+                e.nom AS nom_etudiant,
+                e.prenom,
+                e.email,
+                GROUP_CONCAT(m.nom ORDER BY m.nom SEPARATOR ', ') AS modules
+            FROM 
+                inscriptions i
+            JOIN 
+                etudiants e ON i.id_etudiant = e.apogee
+            JOIN 
+                modules m ON i.id_module = m.id_module
+            GROUP BY 
+                e.apogee, e.nom, e.prenom, e.email
+            ORDER BY 
+                e.nom, e.prenom;";
+    
+    $lignee = $pdo->query($sqle)->fetchAll();
+    
+    if (count($lignee) > 0) {
+        foreach($lignee as $e) {
+            echo '<tr>';
+            echo '<td>' . htmlspecialchars($e["apogee"]) . '</td>';
+            echo '<td>' . htmlspecialchars($e["nom_etudiant"]) . '</td>';
+            echo '<td>' . htmlspecialchars($e["prenom"]) . '</td>';
+            echo '<td>' . htmlspecialchars($e["email"]) . '</td>';
+            echo '<td>' . htmlspecialchars($e["modules"]) . '</td>';
+            echo '</tr>';
+        }
+    } else {
+        echo '<tr><td colspan="5" class="text-center">Aucun étudiant inscrit trouvé</td></tr>';
+    }
+} catch(PDOException $e) {
+    echo '<tr><td colspan="5" class="text-center text-danger">Erreur: ' . $e->getMessage() . '</td></tr>';
+}
+?>
                                 </tbody>
                             </table>
                         </div>
