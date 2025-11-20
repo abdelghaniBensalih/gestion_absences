@@ -84,7 +84,7 @@ function processSeance($seance, $pdo) {
                           $mail->Host = 'smtp.gmail.com';
                           $mail->SMTPAuth = true;
                           $mail->Username = 'oukikredouane21@gmail.com'; // Remplacez par l'email de l'administration
-                          $mail->Password = 'fxbg tmyd lxru ibwj'; // App password recommandé
+                          $mail->Password = ''; // App password recommandé
                          $mail->SMTPSecure = 'tls';
                          $mail->Port = 587;
 
